@@ -44,15 +44,17 @@ public Vector <Integer> process_openfiles; //procesowa tablica otwartych plików
 		if(directories.get(currentdir).containsKey(name)) {
 			return false;
 		}
+	
 		int pom = 0;
-
 		INODE inode = new INODE();
 		inode.size = 0;
 		inode.block_index1 = disk.assign_freeblock(); 
+		
 		if(inode.block_index1 == -1) return false;
 		inode.block_index2 = -1;
 		for(int i=0;i<3;i++) {
 		inode.index_block = -1;}
+		
 		Date date = new Date();
 		inode.i_ctime = date.getTime();
 		inode.i_mtime = inode.i_ctime;
@@ -90,18 +92,17 @@ public Vector <Integer> process_openfiles; //procesowa tablica otwartych plików
 		return true;
 	} */
 public void listDir() { 
-	Collection<Catalog_Entry> pom = directories.get(currentdir).values();
-	Catalog_Entry[] pom2 = pom.toArray(new Catalog_Entry[directories.get(currentdir).size()]);
-	if(pom.size() != 0) {
-	System.out.println("Pliki:");
-	for(int i=0; i<directories.get(currentdir).size(); i++) {
-	if(pom2[i].type == 0) System.out.println(pom2[i].name);
-	}
+	
+ Collection<Catalog_Entry> pom = directories.get(currentdir).values();
+
+	if(pom.size() != 0) {	
+		System.out.println("Pliki:");
+		pom.forEach (entry -> {if(entry.type == 0) System.out.println(entry.name); });
 	}
 	else {
 		System.out.println("Katalog nie zawiera ¿adnych plików");
-		
-	}}
+	}
+}
 
 	
 	/*
