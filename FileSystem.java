@@ -168,13 +168,14 @@ public boolean changeDir(String name) {
 	}
 	public void allce() {
 		Collection<Catalog_Entry> pom = directories.get(currentdir).values();
-		Catalog_Entry[] pom2 = pom.toArray(new Catalog_Entry[directories.get(currentdir).size()]);
-		for(int i=0; i< pom2.length; i++) {
-			System.out.println("Nazwa pliku: " + pom2[i].name);
-			System.out.println("Indeks pliku w tablicy i-wezlow: " + pom2[i].fcb_index);
-			System.out.println("");
-			}
+		
+		if(pom.size() != 0) {	
+			pom.forEach (entry -> {System.out.println("Nazwa pliku: " + entry.name);
+			System.out.println("Indeks pliku w tablicy i-wezlow: " + entry.fcb_index);
+			System.out.println(""); });
+		}
 	}
+	
 	public void allinodesinfo() {
 		Collection<Catalog_Entry> pom = directories.get(currentdir).values();
 		Catalog_Entry[] pom2 = pom.toArray(new Catalog_Entry[directories.get(currentdir).size()]);
