@@ -9,7 +9,7 @@ public static Vector< Hashtable<String, Catalog_Entry>> directories;
 public static INODE[]  fcblist; //list of all i-nodes
 public static Disk disk;
 public static INODE[] openfiles;//systemowa tablica otwartych plikow
-public Vector <Integer> process_openfiles; //procesowa tablica otwartych plików
+public Vector <Integer> process_openfiles; //procesowa tablica otwartych plikÃ³w
 
 
 
@@ -100,7 +100,7 @@ public void listDir() {
 		pom.forEach (entry -> {if(entry.type == 0) System.out.println(entry.name); });
 	}
 	else {
-		System.out.println("Katalog nie zawiera ¿adnych plików");
+		System.out.println("Katalog nie zawiera Â¿adnych plikÃ³w");
 	}
 }
 
@@ -282,7 +282,7 @@ public boolean changeDir(String name) {
 		}
 		
 		int pom = process_openfiles.get(index);
-		clearFile(openfiles[pom]); //czyœci ca³y plik zanim znowu do niego zapisze
+		clearFile(openfiles[pom]); //czyÂœci caÂ³y plik zanim znowu do niego zapisze
 		int i = 0;
 		int pom2 = 0;
 		int pom3 = 0;
