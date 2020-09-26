@@ -178,18 +178,18 @@ public boolean changeDir(String name) {
 	
 	public void allinodesinfo() {
 		Collection<Catalog_Entry> pom = directories.get(currentdir).values();
-		Catalog_Entry[] pom2 = pom.toArray(new Catalog_Entry[directories.get(currentdir).size()]);
-		for(int i=0; i< pom2.length; i++) {
-			System.out.println("Nazwa pliku: " + pom2[i].name);
-			System.out.println("Rozmiar: " + fcblist[pom2[i].fcb_index].size);
-			System.out.println("Czas stworzenia: " + fcblist[pom2[i].fcb_index].i_ctime);
-			System.out.println("Czas ostatniej modyfikacji:" + fcblist[pom2[i].fcb_index].i_mtime);
-			System.out.println("Blok 1 :" + fcblist[pom2[i].fcb_index].block_index1);
+		
+		if(pom.size() != 0) {	
+			pom.forEach (entry -> {System.out.println("Nazwa pliku: " + entry.name);
+			System.out.println("Rozmiar: " + fcblist[entry.fcb_index].size);
+			System.out.println("Czas stworzenia: " + fcblist[entry.fcb_index].i_ctime);
+			System.out.println("Czas ostatniej modyfikacji:" + fcblist[entry.fcb_index].i_mtime);
+			System.out.println("Blok 1 :" + fcblist[entry.fcb_index].block_index1);
 			
-			System.out.println("Blok 2: " + fcblist[pom2[i].fcb_index].block_index2);
+			System.out.println("Blok 2: " + fcblist[entry.fcb_index].block_index2);
 			
-			System.out.println("Blok posredni: " + fcblist[pom2[i].fcb_index].index_block);
-			System.out.println("");
+			System.out.println("Blok posredni: " + fcblist[entry.fcb_index].index_block);
+			System.out.println(""); });
 		}
 	}
  
