@@ -155,127 +155,57 @@ public Vector <Integer> process_openfiles; //procesowa tablica otwartych plików
 	}
 	
 
+	
 	public boolean appendFile(int index, byte[] data) throws FileException {
+		
 		if(!process_openfiles.contains(index)) {
 			return false;
 		}
+		
 		int pom = process_openfiles.get(index);
 		int i = 0;
+		
+		while(i < data.length) {
+			
 		if(disk.freeblockspace(openfiles[pom].block_index1) != -1 ) {
 	
-			i = disk.appendblock(openfiles[pom].block_index1, data);
-				
-			if(i < data.length) {
-				
-				
-				openfiles[pom].block_index2 = disk.assign_freeblock();
-				i = disk.writetoblock(openfiles[pom].block_index2,i, data);
-				
-			}
-			int counter = 0;
-			while(i< data.length) {
-				
-				if(openfiles[pom].index_block == -1) {
-					openfiles[pom].index_block = disk.assign_freeblock();
-					
-				}
-				
-				disk.writetoindexblock(openfiles[pom].index_block, disk.assign_freeblock());
-				byte[] help = disk.readblock(openfiles[pom].index_block, counter+1);
-				i = disk.writetoblock((int)help[counter], i, data);
-				counter++;
-			}
-			openfiles[pom].size += i;
-			Date date = new Date();
-			openfiles[pom].i_mtime = date.getTime(); 
-			return true;
+			i = disk.appendblock(openfiles[pom].block_index1, i, data);
+		     continue;
 		}
-		else if(openfiles[pom].block_index2 != -1 && disk.freeblockspace(openfiles[pom].block_index2) != -1) {
 		
-			
-			i = disk.appendblock(openfiles[pom].block_index2, data);
-			
-		
-			
-			int counter = 0;
-			while(i< data.length) {
-				
-				if(openfiles[pom].index_block == -1) {
-					openfiles[pom].index_block = disk.assign_freeblock();
-					
-				}
-				
-				disk.writetoindexblock(openfiles[pom].index_block, disk.assign_freeblock());
-				byte[] help = disk.readblock(openfiles[pom].index_block, counter+1);
-				i = disk.writetoblock((int)help[counter], i, data);
-				counter++;
-			}
-			openfiles[pom].size += i;
-			Date date = new Date();
-			openfiles[pom].i_mtime = date.getTime(); 
-			return true;
-		}
-		else if(openfiles[pom].block_index2 == -1) {
+	if(openfiles[pom].block_index2 == -1) {
 			openfiles[pom].block_index2 = disk.assign_freeblock();
-			
-			i = disk.writetoblock(openfiles[pom].block_index2,i, data);
-			
-
-			int counter = 0;
-			while(i< data.length) {
-				
-				if(openfiles[pom].index_block == -1) {
-					openfiles[pom].index_block = disk.assign_freeblock();
-				
-				}
-				
-				disk.writetoindexblock(openfiles[pom].index_block, disk.assign_freeblock());
-				byte[] help = disk.readblock(openfiles[pom].index_block, counter+1);
-				i = disk.writetoblock((int)help[counter], i, data);
-				counter++;
-			}
-			openfiles[pom].size += i;
-			Date date = new Date();
-			openfiles[pom].i_mtime = date.getTime(); 
-			return true;
-		}
-		else if(openfiles[pom].index_block != -1) {
-		
-			
-			i = disk.appendblock(disk.readbyte(disk.freeblockspace(openfiles[pom].index_block)-1), data);
-		
-			int counter = (disk.freeblockspace(openfiles[pom].index_block) - (openfiles[pom].index_block*32)) ;
-		while(i<data.length) {
-			disk.writetoindexblock(openfiles[pom].index_block, disk.assign_freeblock());
-			byte[] help = disk.readblock(openfiles[pom].index_block, counter+1);
-			i = disk.writetoblock((int)help[counter], i, data);
-			counter++;
-			}
-			
-			openfiles[pom].size += i;
-			Date date = new Date();
-			openfiles[pom].i_mtime = date.getTime(); 
-			return true;
-		}
-		else if(openfiles[pom].index_block == -1) {
-			openfiles[pom].index_block = disk.assign_freeblock();
-				
-			int counter = 0;
-		while(i<data.length) {
-			disk.writetoindexblock(openfiles[pom].index_block, disk.assign_freeblock());
-			byte[] help = disk.readblock(openfiles[pom].index_block, counter+1);
-			i = disk.writetoblock((int)help[counter], i, data);
-			counter++;
-			}
-			
-			openfiles[pom].size += i;
-			Date date = new Date();
-			openfiles[pom].i_mtime = date.getTime(); 
-			return true;
-		}
-return true;
-	}
 	
+		}
+		
+	if(openfiles[pom].block_index2 != -1 && disk.freeblockspace(openfiles[pom].block_index2) != -1) {
+			
+			i = disk.appendblock(openfiles[pom].block_index2, i, data);
+			 continue;
+		}
+		
+		
+	if(openfiles[pom].index_block == -1) {
+		openfiles[pom].index_block = disk.assign_freeblock();
+	}
+
+	if(openfiles[pom].index_block != -1) {
+		
+		int counter = 0;
+		while(i<data.length) {
+			disk.writetoindexblock(openfiles[pom].index_block, disk.assign_freeblock());
+			byte[] help = disk.readblock(openfiles[pom].index_block, counter+1);
+			i = disk.appendblock((int)help[counter], i, data);
+			counter++;
+			}
+		} } 
+		
+		openfiles[pom].size += i;
+		Date date = new Date();
+		openfiles[pom].i_mtime = date.getTime(); 
+
+		return true;
+	}
 	
 	
 	public byte[] readfromFile(int index, int count) throws FileException{
@@ -733,7 +663,7 @@ return 0;
 		file.block_index2 = -1;}
 		if(file.block_index1 != -1) 
 			disk.clearfirstblock(file.block_index1);
-		
+		file.size = 0;
 	}
 	
 	private void clearwholeFile(INODE file) {

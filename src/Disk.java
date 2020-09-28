@@ -36,18 +36,23 @@ public void writetoindexblock (int n, int a) {
 	}
 	
 }
-public int appendblock(int n, byte[] data) {
-	int pom = 0;
+
+
+public int appendblock(int n, int pom, byte[] data) {
+	
 	if(n >= 0) {
 	for(int i = n*blocksize; i < (n+1)*blocksize; i++) {
 		if(DISK[i] == (byte)0) {
 			DISK[i] = data[pom];
 			pom++;}
 			if(pom+1 > data.length) return pom;
-			
+			//System.out.println(pom);
+			//System.out.println(data.length);
 	}}
 	return pom;
 }
+
+
 public byte[] readblock(int n, int count) {
 	byte[] data;
 	int pom = 0;
