@@ -208,51 +208,40 @@ public Vector <Integer> process_openfiles; //procesowa tablica otwartych plików
 	}
 	
 	
-	public byte[] readfromFile(int index, int count) throws FileException{
-count = openfiles[ process_openfiles.get(index)].size;
+
+	public byte[] readfromFile(int index) throws FileException{
+	
 		if(!process_openfiles.contains(index)) {
 			throw new FileException("Plik nie jest otwarty");
 		}
+		
 		byte[] data; 
 		int pom = process_openfiles.get(index);
-		openfiles[pom].pointer = openfiles[pom].block_index1*32;
-		if(count > openfiles[pom].size) {
-			data = new byte[openfiles[pom].size];
-		} else { 
-			data = new byte[count]; }
+		int count = openfiles[pom].size; 
+	    data = new byte[count];
 		int size_control = 0;
 		byte[] pom2;
+		
 		pom2 = disk.readblock(openfiles[pom].block_index1, count);
-		for(int i = 0; i < pom2.length; i++) {
-			data[i] = pom2[i];
-			size_control++;
-			openfiles[pom].pointer++;
-		}
+		System.arraycopy(pom2, 0, data, size_control, pom2.length);
+		size_control += pom2.length;
+		
 		if(pom2.length < count && openfiles[pom].block_index2 != -1) {
 				pom2 = disk.readblock(openfiles[pom].block_index2, (count-size_control));
-			
-			for(int i = 0; i < pom2.length; i++) {
-				data[size_control] = pom2[i];
-				size_control++;
-				
-			}
+				System.arraycopy(pom2, 0, data, size_control, pom2.length);
+				size_control += pom2.length;
 		}
 		
 		if(pom2.length < count && openfiles[pom].index_block != -1) {
 			byte[] help = disk.readblock(openfiles[pom].index_block, 32);
+			
 			for(int c = 0; c < help.length; c++) {
 				if(help[c] != (byte)0) {
-				
-			pom2 = disk.readblock((int)help[c], (count-size_control));
-			for(int i = 0; i < pom2.length; i++) {
-				
-				data[size_control] = pom2[i];
-				size_control++;
-				
-			}}
-			
-		}}
-		openfiles[pom].pointer = openfiles[pom].block_index1 * 32;
+					pom2 = disk.readblock((int)help[c], (count-size_control));
+					System.arraycopy(pom2, 0, data, size_control, pom2.length);
+					size_control += pom2.length;}
+				}
+			}
 		return data;
 	}
 	
