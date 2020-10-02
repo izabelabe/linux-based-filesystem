@@ -245,6 +245,8 @@ public Vector <Integer> process_openfiles; //procesowa tablica otwartych plików
 		return data;
 	}
 	
+	
+
 	public byte[] readingfromFile(int index, int count) throws FileException{
 		
 				if(!process_openfiles.contains(index)) {
@@ -258,41 +260,51 @@ public Vector <Integer> process_openfiles; //procesowa tablica otwartych plików
 				} else { 
 					data = new byte[count]; }
 				int size_control = 0;
-				byte[] pom2 = new byte[1];
+				byte[] pom2;
 				
 				if(openfiles[pom].pointer >= openfiles[pom].block_index1*32 && openfiles[pom].pointer < ((openfiles[pom].block_index1 + 1)*32)  ) {
 				pom2 = disk.readpartofblock(openfiles[pom].block_index1, count,  openfiles[pom].pointer);
+					
 				
 				for(int i = 0; i < pom2.length && i < data.length; i++) {
 					data[i] = pom2[i];
 					size_control++;
 					openfiles[pom].pointer++;
 				} 
-				if(pom2.length < count && openfiles[pom].block_index2 != -1) {
 				
-					openfiles[pom].pointer = openfiles[pom].block_index2 * 32;
-						pom2 = disk.readblock(openfiles[pom].block_index2, (count-size_control));
-					
-					for(int i = 0; i < pom2.length; i++) {
-						data[size_control] = pom2[i];
-						size_control++;
-						openfiles[pom].pointer++;
-						
-					}
+			  if(openfiles[pom].pointer == ((openfiles[pom].block_index1 + 1)*32) && openfiles[pom].block_index2 != -1) {
+				  openfiles[pom].pointer = openfiles[pom].block_index2*32;
+			  }
 				}
-				if(pom2.length < count && openfiles[pom].index_block != -1) {
+			
+				if(openfiles[pom].block_index2 != -1 && openfiles[pom].pointer >= openfiles[pom].block_index2*32 && openfiles[pom].pointer < ((openfiles[pom].block_index2 + 1)*32)) {
+				
+
+						pom2 = disk.readpartofblock(openfiles[pom].block_index2, (count-size_control),  openfiles[pom].pointer);
+							
+						for(int i = 0; i < pom2.length && i< data.length &&  size_control < data.length; i++) {
+							data[size_control] = pom2[i];
+							size_control++;
+							openfiles[pom].pointer++;
+						}
+				  if(openfiles[pom].pointer == ((openfiles[pom].block_index2 + 1)*32) && openfiles[pom].index_block != -1) {
+					  openfiles[pom].pointer = openfiles[pom].index_block*32;
+				  }
+				  
+				}
+				if(openfiles[pom].index_block != -1) {
 						byte[] help = disk.readblock(openfiles[pom].index_block, 32);
 						int control = 0;
+						if(openfiles[pom].pointer == openfiles[pom].index_block*32) openfiles[pom].pointer = (int)help[0]*32;
+						
 						while(control != 1 && size_control < count) {
 							for(int c = 0; c < help.length; c++) {
 								if(help[c] != (byte)0) {	
 									
-								if (openfiles[pom].pointer ==  (openfiles[pom].block_index2+1)*32) {
-									openfiles[pom].pointer = (int)help[c]*32;	
+								if (openfiles[pom].pointer >=  (int)help[c]*32 && openfiles[pom].pointer <  ((int)help[c]+1)*32) {
+								
 								}
-								else if (openfiles[pom].pointer >=  (int)help[c]*32 && openfiles[pom].pointer <  (help[c]+1)*32) {
-							
-								}
+
 								else if 
 									(openfiles[pom].pointer ==  ((int)help[c]+1)*32) {
 									openfiles[pom].pointer = (int)help[c+1]*32;
@@ -313,100 +325,12 @@ public Vector <Integer> process_openfiles; //procesowa tablica otwartych plików
 										
 									
 									if(size_control >= data.length) {control = 1; break;}
-									
-								} 	} }   }}
-				
-				}
-			
-				else if (openfiles[pom].pointer >= openfiles[pom].block_index2*32 && openfiles[pom].pointer < ((openfiles[pom].block_index2 + 1)*32)  ) {
-					if(pom2.length < count && openfiles[pom].block_index2 != -1) {
-						pom2 = disk.readpartofblock(openfiles[pom].block_index2, (count-size_control),  openfiles[pom].pointer);
-					
-						
-						
-					for(int i = 0; i < pom2.length && i< data.length; i++) {
-						data[size_control] = pom2[i];
-						size_control++;
-						openfiles[pom].pointer++;
-					}
-				}
-				
-				if(pom2.length < count && openfiles[pom].index_block != -1) {
-			
-					byte[] help = disk.readblock(openfiles[pom].index_block, 32);
-					
-					int control = 0;
-					while(size_control < count && control != 1) {
-						for(int c = 0; c < help.length; c++) {
-							if(help[c] != (byte)0) {	
-								
-							if (openfiles[pom].pointer ==  (openfiles[pom].block_index2+1)*32) {
-								openfiles[pom].pointer = (int)help[c]*32;	
-							}
-							else if (openfiles[pom].pointer >=  (int)help[c]*32 && openfiles[pom].pointer <  ((int)help[c]+1)*32) {
-						
-							}
-							else if 
-								(openfiles[pom].pointer ==  ((int)help[c]+1)*32) {
-								openfiles[pom].pointer = (int)help[c+1]*32;
-								}	
-							else continue;
-						
-							pom2 = disk.readpartofblock((int)help[c], count-size_control, openfiles[pom].pointer);
-							for(int i = 0; i < pom2.length; i++) {
-								if(pom2[i] == (byte)0 || size_control >= data.length) { control = 1; break;}
-								data[size_control] = pom2[i];
-								size_control++;
-								openfiles[pom].pointer++;
-									if(openfiles[pom].pointer == endoffile(openfiles[pom])) {
-									control = 1;
-								}
-									
-								if(size_control >= data.length) { control = 1; break;}
-								
-							} 	} }   }}}
-				else {
-				
-					byte[] help = disk.readblock(openfiles[pom].index_block, 32);
-					
-				int control = 0;
-					while(size_control < count && control != 1) {
-					
-						for(int c = 0; c < help.length; c++) {
-							if(help[c] != (byte)0) {	
-								
-							if (openfiles[pom].pointer ==  (openfiles[pom].block_index2+1)*32) {
-								openfiles[pom].pointer = (int)help[c]*32;	
-								
-							}
-							else if (openfiles[pom].pointer >=  (int)help[c]*32 && openfiles[pom].pointer <  (help[c]+1)*32) {
-							
-							}
-							else if 
-								(openfiles[pom].pointer ==  (((int)help[c]+1)*32)) {
-								openfiles[pom].pointer = (int)help[c+1]*32;
-								
-								}	
-							else continue;
-					
-							
-							pom2 = disk.readpartofblock((int)help[c], count-size_control, openfiles[pom].pointer);
-							for(int i = 0; i < pom2.length; i++) {
-								
-								if(pom2[i] == (byte)0 || size_control >= data.length) { control = 1; break;}
-								data[size_control] = pom2[i];
-								size_control++;
-								openfiles[pom].pointer++;
-									if(openfiles[pom].pointer == endoffile(openfiles[pom])) {
-									control = 1;
-								}
-								
-								if(size_control >= data.length) {control = 1; break;}
-								
-							} 	} else { control = 1; break; }}   }}
-					
-				
-				if(openfiles[pom].pointer == endoffile(openfiles[pom])) {
+									} 	
+								} 
+							}   
+						}}
+		
+				if(openfiles[pom].pointer >= endoffile(openfiles[pom])) {
 					openfiles[pom].pointer = openfiles[pom].block_index1 *32;
 				}
 			for(int i = 0; i < data.length; i++) {
