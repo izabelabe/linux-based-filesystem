@@ -1,15 +1,16 @@
 package projekt_SO;
+import java.io.IOException;
 import java.util.*;
 
-//docelowo forma katalogu dwupoziomowego 
+//a two-level directory
 public class FileSystem {
 int currentdir;
 public static Hashtable<String,Catalog_Entry> rootdirectory;
 public static Vector< Hashtable<String, Catalog_Entry>> directories;
 public static INODE[]  fcblist; //list of all i-nodes
 public static Disk disk;
-public static INODE[] openfiles;//systemowa tablica otwartych plikow
-public Vector <Integer> process_openfiles; //procesowa tablica otwartych plików
+public static INODE[] openfiles;//system table of opes
+public Vector <Integer> process_openfiles; //process table of open files
 
 
 
@@ -57,9 +58,9 @@ public Vector <Integer> process_openfiles; //procesowa tablica otwartych plików
 		for(int i=0;i<3;i++) {
 		inode.index_block = -1;}
 		
-		Date date = new Date();
-		inode.i_ctime = date.getTime();
-		inode.i_mtime = inode.i_ctime;
+		
+		//inode.i_ctime = date.getTime();
+		//inode.i_mtime = inode.i_ctime;
 		inode.pointer = inode.block_index1*32;
 		pom = freefcbindex();
 		fcblist[pom] = inode;
@@ -68,6 +69,9 @@ public Vector <Integer> process_openfiles; //procesowa tablica otwartych plików
 		entry.name = name;
 		entry.type = 0;
 		entry.fcb_index = pom;
+		Date date = new Date();
+		entry.i_ctime = date.getTime();
+		inode.i_mtime = entry.i_ctime;
 		directories.get(currentdir).put(name,entry);
 		
 		System.out.println("Stworzono plik o nazwie " + name);
@@ -348,7 +352,43 @@ public Vector <Integer> process_openfiles; //procesowa tablica otwartych plików
 	return data;
 			}
 	
-	/*public boolean createDirectory (String name) throws FileException {
+	
+public boolean deleteFile(String name) throws FileException {
+		
+		if(directories.get(currentdir).containsKey(name)) {
+			for(int i=0; i<process_openfiles.size();i++) {
+				if(openfiles[process_openfiles.get(i)] == fcblist[directories.get(currentdir).get(name).fcb_index]) {
+					openfiles[process_openfiles.get(i)] = null;
+					process_openfiles.remove(i);
+			}}
+			
+			for(int i=0; i<32;i++) {
+				if(openfiles[i] == null) {
+					
+				
+			} else if (openfiles[i] == fcblist[directories.get(currentdir).get(name).fcb_index]) {
+				return false;
+				}
+			
+			}
+			if(directories.get(currentdir).get(name).type == 1) {
+				return false;
+			}
+			clearwholeFile(fcblist[directories.get(currentdir).get(name).fcb_index]);
+			fcblist[directories.get(currentdir).get(name).fcb_index].size =0;
+			fcblist[directories.get(currentdir).get(name).fcb_index] = null;
+		
+			directories.get(currentdir).remove(name);
+			return true;
+			}
+		else return false;
+	} 
+
+
+
+//directory management
+	
+	public boolean createDirectory (String name) throws FileException {
 		if(directories.get(currentdir).containsKey(name)) {
 			//throw new FileException("Katalog o danej nazwie juz istnieje w danym katalogu");
 			return false;
@@ -359,70 +399,108 @@ public Vector <Integer> process_openfiles; //procesowa tablica otwartych plików
 		entry.name = name;
 		entry.type = 1;
 		entry.fcb_index = -1;
+		Date date = new Date();
+		entry.i_ctime = date.getTime();
 		directories.get(currentdir).put(name,entry);
 		Hashtable<String, Catalog_Entry> catalog = new Hashtable<String, Catalog_Entry>();
 		directories.add(catalog);
-		
+	
 		return true;
-	} */
-public void listDir() { 
-	
- Collection<Catalog_Entry> pom = directories.get(currentdir).values();
-
-	if(pom.size() != 0) {	
-		System.out.println("Pliki:");
-		pom.forEach (entry -> {if(entry.type == 0) System.out.println(entry.name); });
-	}
-	else {
-		System.out.println("Katalog nie zawiera ¿adnych plików");
-	}
-}
+	} 
 
 	
-	/*
+	
 public boolean changeDir(String name) {
 	
 	int filecontrol = 0;
 	if(currentdir == 0) {
 		
 	Collection<Catalog_Entry> pom = directories.get(currentdir).values();
-	Catalog_Entry[] pom2 = pom.toArray(new Catalog_Entry[directories.get(currentdir).size()]);
-	
+	Catalog_Entry pom2[] = pom.toArray(new Catalog_Entry[directories.get(currentdir).size()]);
+	sortbytime(pom2);
 	for(int i=0; i<directories.get(currentdir).size(); i++) {
-		if(pom2[i].type == 0) { filecontrol++;
+		if(pom2[i].type == 0) { 
+			filecontrol++;
 		}
 		
 		else if((!name.contentEquals(pom2[i].name)) && (pom2[i].type == 1)) {
-			filecontrol++;
-		}
-		else if((name.contentEquals(pom2[i].name)) && (pom2[i].type == 1)) { 		
 			System.out.println("i:" + i);
-			System.out.println("filecontrol:" + filecontrol);
-			currentdir = (i-filecontrol+1); 
-			System.out.println("aktualny katalog:" + currentdir);
+			System.out.println("pom2[i].name file:" + pom2[i].name);
+		}
+		
+		else if((name.contentEquals(pom2[i].name)) && (pom2[i].type == 1)) { 		
+			currentdir = (i-filecontrol+1);
 			return true;
 		}
-		}
-	System.out.println("filecontrol:" + filecontrol);
-	System.out.println("size directories:" + (directories.get(currentdir).size()));
+	}
+	
 	if(filecontrol == directories.get(currentdir).size()) {
 		System.out.println("nie znaleziono takiego katalogu:");
 		return false;
 	}}
-	currentdir = 0;
+	else currentdir = 0;
 	return true;
 	
 	}
-*/
+
+public boolean deleteDir(String name)throws FileException {
+	currentdir = 0;
+	if(directories.get(currentdir).containsKey(name) && directories.get(currentdir).get(name).type == 1) {
+		changeDir(name);
+		Collection<Catalog_Entry> pom = directories.get(currentdir).values();
+		Catalog_Entry[] pom2 = pom.toArray(new Catalog_Entry[directories.get(currentdir).size()]);
+		for(int i=0; i<directories.get(currentdir).size();i++) {
+				deleteFile(pom2[i].name);
+			}
+			directories.remove(currentdir);
+			currentdir = 0;
+			directories.get(currentdir).remove(name);
+		return true;
+	}
+	return false;
+} 
+
+
+private Catalog_Entry[] sortbytime(Catalog_Entry lista[]) {
+	int  n =  lista.length-1;
+	for(int i =0; i<n; i++) {
+		for(int j=0; j < n; j++) {
+			if(lista[j].i_ctime > lista[j+1].i_ctime) {
+				Catalog_Entry help = lista[j];
+				lista[j] = lista[j+1];
+				lista[j+1] = help;
+			}
+		}
+	}
+	return lista;
+}
+
+
+// information output
+
+public void listDir() { 
+	
+	 Collection<Catalog_Entry> pom = directories.get(currentdir).values();
+System.out.println(currentdir);
+		if(pom.size() != 0) {	
+			System.out.println("Pliki:");
+			pom.forEach (entry -> {if(entry.type == 0) System.out.println(entry.name); });
+			System.out.println("Katalogi:");
+			pom.forEach (entry -> {if(entry.type == 1) System.out.println(entry.name); });
+		}
+		else {
+			System.out.println("Katalog nie zawiera ¿adnych plików");
+		}
+	}
 
 
 	public void allce() {
 		Collection<Catalog_Entry> pom = directories.get(currentdir).values();
 		
 		if(pom.size() != 0) {	
-			pom.forEach (entry -> {System.out.println("Nazwa pliku: " + entry.name);
+			pom.forEach (entry -> {if(entry.type == 0) {System.out.println("Nazwa pliku: " + entry.name);
 			System.out.println("Indeks pliku w tablicy i-wezlow: " + entry.fcb_index);
-			System.out.println(""); });
+			System.out.println(""); }});
 		}
 	}
 	
@@ -430,23 +508,25 @@ public boolean changeDir(String name) {
 		Collection<Catalog_Entry> pom = directories.get(currentdir).values();
 		
 		if(pom.size() != 0) {	
-			pom.forEach (entry -> {System.out.println("Nazwa pliku: " + entry.name);
+			pom.forEach (entry -> {if(entry.type == 0) {System.out.println("Nazwa pliku: " + entry.name);
 			System.out.println("Rozmiar: " + fcblist[entry.fcb_index].size);
-			System.out.println("Czas stworzenia: " + fcblist[entry.fcb_index].i_ctime);
+			//System.out.println("Czas stworzenia: " + fcblist[entry.fcb_index].i_ctime);
+			System.out.println("Czas stworzenia: " + entry.i_ctime);
 			System.out.println("Czas ostatniej modyfikacji:" + fcblist[entry.fcb_index].i_mtime);
 			System.out.println("Blok 1 :" + fcblist[entry.fcb_index].block_index1);
 			
 			System.out.println("Blok 2: " + fcblist[entry.fcb_index].block_index2);
 			
 			System.out.println("Blok posredni: " + fcblist[entry.fcb_index].index_block);
-			System.out.println(""); });
+			System.out.println(""); }});
 		}
 	}
  
 	public void info(String name) {
-		if(directories.get(currentdir).containsKey(name)) {
+		if(directories.get(currentdir).containsKey(name) && directories.get(currentdir).get(name).type == 0) {
 			System.out.println("Size: " + fcblist[directories.get(currentdir).get(name).fcb_index].size);
-			System.out.println("Time of creation: " + fcblist[directories.get(currentdir).get(name).fcb_index].i_ctime);
+			//System.out.println("Time of creation: " + fcblist[directories.get(currentdir).get(name).fcb_index].i_ctime);
+			System.out.println("Time of creation: " + directories.get(currentdir).get(name).i_ctime);
 			System.out.println("Time of the last modification:" + fcblist[directories.get(currentdir).get(name).fcb_index].i_mtime);
 			System.out.println("Blok 1 :" + fcblist[directories.get(currentdir).get(name).fcb_index].block_index1);
 			
@@ -457,19 +537,7 @@ public boolean changeDir(String name) {
 			
 		}
 	}
-	public void changepointer (String name, int n) {
-		if(directories.get(currentdir).containsKey(name)) {
-			if(n == 1) {
-				fcblist[directories.get(currentdir).get(name).fcb_index].pointer = fcblist[directories.get(currentdir).get(name).fcb_index].block_index1*32;
-			}
-			if(n == 2 && fcblist[directories.get(currentdir).get(name).fcb_index].block_index2 != -1) {
-				fcblist[directories.get(currentdir).get(name).fcb_index].pointer = fcblist[directories.get(currentdir).get(name).fcb_index].block_index2*32;
-			}
-			if(n == 3 && fcblist[directories.get(currentdir).get(name).fcb_index].index_block != -1) {
-				fcblist[directories.get(currentdir).get(name).fcb_index].pointer = fcblist[directories.get(currentdir).get(name).fcb_index].index_block*32;
-			}
-		}		
-	}
+	
 	
 	
 	
@@ -492,8 +560,9 @@ public boolean changeDir(String name) {
 		}else  System.out.println("Dany plik nie ma przydzielonego bloku indeksowego");}
 		}
 	
-	/*
+	
 	public void dirinfo (String name) {
+		int dir = currentdir;
 		if(currentdir == 0) {
 		changeDir(name);}
 		else {
@@ -506,7 +575,7 @@ public boolean changeDir(String name) {
 		if(currentdir == 0) {
 		System.out.println("Pliki:");
 		for(int i=0; i<directories.get(currentdir).size(); i++) {
-		if(pom2[i].type == 0) System.out.println("Nazwa pliku" + pom2[i].name);
+		if(pom2[i].type == 0) System.out.println("Name: " + pom2[i].name);
 		info(pom2[i].name);
 		}
 		System.out.println("Podkatalogi:");
@@ -515,16 +584,34 @@ public boolean changeDir(String name) {
 		
 		}}
 		else {
+			if(directories.get(currentdir).size() > 0){
 			System.out.println("Pliki:");
 			for(int i=0; i<directories.get(currentdir).size(); i++) {
 			if(pom2[i].type == 0) System.out.println(pom2[i].name);
 			info(pom2[i].name);
-			}
-		}// else System.out.println("Katalog pusty");
-		
+			}}else System.out.println("Katalog pusty");
+		}
+		currentdir = dir;
 	}
-*/
+
 	
+	
+	// auxiliary functions
+	
+	
+	public void changepointer (String name, int n) {
+		if(directories.get(currentdir).containsKey(name)) {
+			if(n == 1) {
+				fcblist[directories.get(currentdir).get(name).fcb_index].pointer = fcblist[directories.get(currentdir).get(name).fcb_index].block_index1*32;
+			}
+			if(n == 2 && fcblist[directories.get(currentdir).get(name).fcb_index].block_index2 != -1) {
+				fcblist[directories.get(currentdir).get(name).fcb_index].pointer = fcblist[directories.get(currentdir).get(name).fcb_index].block_index2*32;
+			}
+			if(n == 3 && fcblist[directories.get(currentdir).get(name).fcb_index].index_block != -1) {
+				fcblist[directories.get(currentdir).get(name).fcb_index].pointer = fcblist[directories.get(currentdir).get(name).fcb_index].index_block*32;
+			}
+		}		
+	} 
 	
 	
 	public String bytetoString (byte[] data) {
@@ -542,16 +629,7 @@ public boolean changeDir(String name) {
 			if(disk.freeblockspace(pom[pom.length-1]) != -1)
 			return disk.freeblockspace(pom[pom.length-1]);
 			else return (pom[pom.length-1]+1)*32-1;
-		/*	for(int i=0; i< pom.length; i++) {
-			if(disk.freeblockspace(pom[i]) != -1) {
-				return disk.freeblockspace((int)pom[i]);
-			}
-			else if(disk.freeblockspace((int)pom[i]) == -1 && i+1 > pom[i]) {}
-			else if(disk.freeblockspace((int)pom[i]) == -1 && pom[i+1] == (byte)0) { return (pom[i]+1)*32 -1;}
-			
-			
-			//else if(disk.freeblockspace(pom[i]) == -1 && )
-		}*/ }
+	 }
 		else if(file.block_index2 != -1) {
 			if(disk.freeblockspace(file.block_index2) != -1) {
 				return disk.freeblockspace(file.block_index2);
@@ -590,61 +668,8 @@ return 0;
 		if(file.block_index1 != -1)
 			disk.clearblock(file.block_index1);
 	}
-
-	public boolean deleteFile(String name) throws FileException {
-		
-		if(directories.get(currentdir).containsKey(name)) {
-			for(int i=0; i<process_openfiles.size();i++) {
-				if(openfiles[process_openfiles.get(i)] == fcblist[directories.get(currentdir).get(name).fcb_index]) {
-					openfiles[process_openfiles.get(i)] = null;
-					process_openfiles.remove(i);
-			}}
-			//sprawdza czy dalej plik jest w systemowej tablichy otwartych plikow (czy jest otwarty przez inny proces)
-			//kontynuuje tylko jezeli plik jest zamkniety dla kazdego procesu
-			for(int i=0; i<32;i++) {
-				if(openfiles[i] == null) {
-					
-				
-			} else if (openfiles[i] == fcblist[directories.get(currentdir).get(name).fcb_index]) {
-				return false;
-				}
-			
-			}
-			if(directories.get(currentdir).get(name).type == 1) {
-				return false;
-			}
-			clearwholeFile(fcblist[directories.get(currentdir).get(name).fcb_index]);
-			fcblist[directories.get(currentdir).get(name).fcb_index].size =0;
-			fcblist[directories.get(currentdir).get(name).fcb_index] = null;
-		
-			directories.get(currentdir).remove(name);
-			return true;
-			}
-		else return false;
-	} 
-/*	public boolean deleteDir(String name)throws FileException {
-		currentdir = 0;
-		if(directories.get(currentdir).containsKey(name) && directories.get(currentdir).get(name).type == 1) {
-			changeDir(name);
-			Collection<Catalog_Entry> pom = directories.get(currentdir).values();
-			Catalog_Entry[] pom2 = pom.toArray(new Catalog_Entry[directories.get(currentdir).size()]);
-			for(int i=0; i<directories.get(currentdir).size();i++) {
-			
-				//try {
-					deleteFile(pom2[i].name);
-				//} catch (FileException e) {
-					//currentdir = 0;
-					//throw new FileException("Usuwany katalog zawiera plik otwarty przez inny proces");
-					
-				} //}
-				directories.remove(currentdir);
-				currentdir = 0;
-				directories.get(currentdir).remove(name);
-			return true;
-		}
-		return false;
-	} 
-	*/
-
+	
+	
+	
 	
 }
