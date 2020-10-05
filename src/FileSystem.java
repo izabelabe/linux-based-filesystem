@@ -217,6 +217,7 @@ public Vector <Integer> process_openfiles; //process table of open files
 	
 		if(!process_openfiles.contains(index)) {
 			throw new FileException("Plik nie jest otwarty");
+			
 		}
 		
 		byte[] data; 
@@ -424,8 +425,7 @@ public boolean changeDir(String name) {
 		}
 		
 		else if((!name.contentEquals(pom2[i].name)) && (pom2[i].type == 1)) {
-			System.out.println("i:" + i);
-			System.out.println("pom2[i].name file:" + pom2[i].name);
+		
 		}
 		
 		else if((name.contentEquals(pom2[i].name)) && (pom2[i].type == 1)) { 		
@@ -434,10 +434,8 @@ public boolean changeDir(String name) {
 		}
 	}
 	
-	if(filecontrol == directories.get(currentdir).size()) {
-		System.out.println("nie znaleziono takiego katalogu:");
 		return false;
-	}}
+	}
 	else currentdir = 0;
 	return true;
 	
