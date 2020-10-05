@@ -9,7 +9,7 @@ public static Hashtable<String,Catalog_Entry> rootdirectory;
 public static Vector< Hashtable<String, Catalog_Entry>> directories;
 public static INODE[]  fcblist; //list of all i-nodes
 public static Disk disk;
-public static INODE[] openfiles;//system table of opes
+public static INODE[] openfiles;//system table of open files
 public Vector <Integer> process_openfiles; //process table of open files
 
 
